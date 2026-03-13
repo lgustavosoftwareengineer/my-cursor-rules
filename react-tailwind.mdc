@@ -1,0 +1,158 @@
+---
+description: React, TypeScript, Tailwind — frontend architecture, folder structure, features, colocation. Use when editing React + Tailwind apps (Vite, CRA, etc.).
+globs: src/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+## Stack
+
+- TypeScript, React, Tailwind CSS (no Shadcn UI)
+- react-hook-form + Zod for form validation
+- @tanstack/react-query for server state (mutations and queries)
+
+## Architecture — Vertical Slice / Feature-based
+
+The fundamental principle: **place code as close as possible to where it is relevant.**
+
+### Folder structure (`src/`)
+
+```
+src/
+├── app/              # App-wide setup (routing, root layout, providers, global styles)
+│                     # Rule: no other folder imports from /app
+├── features/         # Feature modules (vertical slices)
+│   └── reports/
+│       ├── components/   # Components scoped to this feature
+│       │   └── ReportForm/
+│       │       ├── ReportForm.tsx  # Component implementation
+│       │       └── index.ts        # Barrel: export * from "./ReportForm"
+│       ├── constants/    # Constants scoped to this feature
+│       ├── hooks/        # Hooks scoped to this feature
+│       ├── requests/     # API call functions (e.g. createReport.ts)
+│       ├── schemas/      # Zod schemas + form resolvers
+│       ├── types/        # TypeScript types/interfaces
+│       ├── utils/        # Utility functions scoped to this feature
+│       └── index.ts      # PUBLIC API — only export what external code may use
+├── components/       # Global reusable UI components — each follows Base+Variants+Facade pattern
+│   └── ui/
+│       ├── index.ts          # Barrel: export all facades
+│       ├── Button/
+│       │   ├── index.ts
+│       │   ├── Button.tsx        # Facade (variant?: 'primary' | 'secondary')
+│       │   ├── PrimaryButton.tsx
+│       │   ├── SecondaryButton.tsx
+│       │   └── Base/
+│       │       ├── index.ts
+│       │       └── ButtonBase.tsx
+│       ├── Field/            # (same structure: Base/ + Field.tsx + index.ts)
+│       ├── Input/
+│       ├── Textarea/
+│       └── Badge/            # (Base/ + DangerBadge + WarnBadge + SuccessBadge + Badge.tsx)
+└── services/         # External service wrappers (ViaCEP, analytics, etc.)
+    └── viacep/
+        └── index.ts
+```
+
+### Feature boundary rules
+
+- Every feature exposes a public API via its `index.ts`
+- External code (routes, other features) imports **only** from `@/features/reports`, never from internal paths like `@/features/reports/components/ReportForm`
+- Features should be self-sufficient; avoid cross-feature imports when possible
+- `app/` is the only exception — it can import from all features but no one imports from it
+
+### Colocation
+
+- Code lives as close as possible to where it is used
+- Feature-specific types, constants, hooks, and utils live inside the feature folder
+- Only truly shared code goes in `components/` (UI primitives) or `services/` (external adapters)
+
+## Naming Conventions
+
+- Directories: PascalCase for component folders (`ReportForm/`), kebab-case for everything else (`use-report-form.ts`, `report-form.constants.ts`)
+- Component files: `ComponentName.tsx` inside its own folder + `index.ts` barrel (e.g. `ReportForm/ReportForm.tsx` + `ReportForm/index.ts`) — **never `index.tsx`**
+- Non-component files: kebab-case (e.g. `create-report.ts`, `report.schema.ts`, `report.types.ts`)
+- Constants (never reassigned): UPPER_SNAKE_CASE
+
+## Import conventions
+
+- Use `@/` path alias for all imports from `src/`
+- Within a feature, use relative imports (e.g. `../constants/report-form.constants`)
+- External consumers always import from the feature's public API (`@/features/reports`)
+- Preferred import order: (1) external packages, (2) `@/components`, `@/services`, (3) `@/features/*`, (4) relative `./` or `../`
+
+## TypeScript
+
+- Strict mode — no `any`
+- **Prefer `type` over `interface`** for object shapes and props (type alias everywhere for consistency and easier unions/intersections). Use `interface` only when extending built-in or library types is required (e.g. `extends ComponentPropsWithoutRef<"input">` can stay as `interface X extends ...` or become `type X = ComponentPropsWithoutRef<"input"> & { ... }`).
+- Avoid enums; use `as const` objects or string literal unions
+
+## UI Component Architecture (`components/ui/`)
+
+### Utilities
+- Use `cn()` from `@/shared/cn` for all className merging — never use `clsx` directly
+- `cn()` = `clsx` + `tailwind-merge`: handles conditionals AND resolves Tailwind class conflicts
+
+### Structure — `cva` for variant components, `cn` for simple ones
+
+**With visual variants** (`Button`, `Badge`): use `cva` from `class-variance-authority`
+```
+ComponentName/
+├── ComponentName.tsx   # cva definition + single component
+└── index.ts            # export { ComponentName } + types
+```
+
+```tsx
+// Example: Button.tsx
+const buttonVariants = cva("shared-structural-classes", {
+  variants: {
+    variant: {
+      primary: "...",
+      secondary: "...",
+    },
+  },
+  defaultVariants: { variant: "primary" },
+})
+
+export type ButtonProps = ComponentPropsWithoutRef<"button"> & VariantProps<typeof buttonVariants>
+
+export function Button({ variant, className, ...props }: ButtonProps) {
+  return <button className={cn(buttonVariants({ variant }), className)} {...props} />
+}
+```
+
+**Without visual variants** (`Field`, `Input`, `Textarea`): plain component with `cn`
+```
+ComponentName/
+├── ComponentName.tsx   # component with cn() for conditional classes
+└── index.ts
+```
+
+### Rules
+1. **`cva`** for components with distinct visual variants (different colors, spacing, borders)
+2. **`cn`** for conditional styling based on native props (e.g. `readOnly`, `disabled`)
+3. **No `Base/` subfolder** — `cva` replaces the Base+Variants pattern
+4. **Barrel** exports only the component + public types; `index.ts` = `export * from "./ComponentName"`
+5. Always add new components to `components/ui/index.ts`
+
+### Checklist for new UI components
+- [ ] Create `ComponentName/ComponentName.tsx` — use `cva` if it has variants, plain `cn` if not
+- [ ] Export with `ComponentName/index.ts` (`export * from "./ComponentName"`)
+- [ ] Add export to `components/ui/index.ts`
+
+---
+
+## Code style
+
+- Functional components only, no classes
+- Named exports everywhere (no default exports except entry points like `main.tsx` or `App.tsx`)
+- Descriptive variable names with auxiliary verbs (`isLoading`, `hasError`, `isPending`)
+- Tailwind only for styling — no inline styles, no CSS modules
+- **Never store Tailwind classes in variables or constants** — write them hardcoded inside `className` or `clsx()`. Variables break Tailwind's static analysis and autocomplete.
+  ```tsx
+  // ❌ wrong
+  const baseClass = "rounded-lg border px-4"
+  <input className={clsx(baseClass, ...)} />
+
+  // ✅ correct
+  <input className={cn("rounded-lg border px-4", ...)} />
+  ```
