@@ -1,0 +1,39 @@
+---
+description: Testing — stubs vs mocks, placement of test doubles, shared vs local. Use when writing or refactoring tests, mocks, or stubs.
+globs: "**/*.spec.{ts,tsx},**/*.test.{ts,tsx},**/mocks.{ts,tsx},**/stubs.ts"
+alwaysApply: false
+---
+
+# Testing — Stubs, Mocks and Test Helpers
+
+## Stubs vs Mocks
+
+- **Stubs**: Canned data. No behavior, no call verification. Use to replace API responses or form values.
+  - **Naming**: `STUB_*` (e.g. `STUB_REPORT`, `STUB_DTO`, `STUB_REPORT_INPUT`).
+  - **Files**: `stubs.ts` (per module or shared, e.g. `features/reports/testing/stubs.ts`).
+
+- **Mocks**: Objects that record interactions (`jest.fn()`). Use for assertions on calls (e.g. `expect(mock.save).toHaveBeenCalledWith(...)`).
+  - **Naming**: `buildMock*` (e.g. `buildMockMutation`, `buildMockReportsRepository`).
+  - **Files**: `mocks.ts` or `mocks.tsx` (per module or shared, e.g. `features/reports/testing/mocks.tsx`).
+
+## Placement
+
+- **Do not** put mocks or stubs inside `__tests__/`. Jest will treat them as test suites (no tests inside = failure). Place them as siblings (e.g. `ComponentName/mocks.ts`) or in a shared folder (e.g. `testing/mocks.tsx`, `testing/stubs.ts`).
+
+- **Local mocks/stubs** (next to the test): Only when the test needs **internal** mock/stub logic specific to that component (e.g. `DEFAULT_PROPS`, `IDLE_HOOK_RETURN`, `renderWithProviders()` that wraps a specific page). Do not create a local file that only re-exports from the shared file.
+
+- **Shared mocks/stubs**: Prefer a single shared file per app or feature (e.g. `apps/web/src/features/reports/testing/mocks.tsx` and `testing/stubs.ts`, or `apps/api/src/reports/mocks.ts` and `reports/stubs.ts`). Tests that only need shared data or shared mocks should **import directly** from the shared file (e.g. `@/features/reports/testing/stubs`, `@/reports/stubs`).
+
+## No Re-exports
+
+- If a local `mocks.ts` or `stubs.ts` only re-exports from the shared file, remove the local file and have the test import directly from the shared file.
+
+## Test Structure (AAA)
+
+- Follow **Arrange → Act → Assert** with explicit section comments in each test.
+- Constants used only in tests: UPPER_SNAKE_CASE (e.g. stubs, or local test constants).
+
+## API (NestJS)
+
+- Same conventions: `stubs.ts` with `STUB_*`, `mocks.ts` with `buildMock*`. Place at module level (e.g. `reports/stubs.ts`, `reports/mocks.ts`, `llm/stubs.ts`, `audit/mocks.ts`) or in a shared testing folder as needed.
+- Specs import from `@/module/stubs` and `@/module/mocks` (or shared) instead of re-exporting through a local file.
