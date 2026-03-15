@@ -1,5 +1,6 @@
 ---
 description: Frontend and TypeScript — React, Next.js, JavaScript, HTML, CSS, Tailwind, Shadcn/Radix, early returns, class names, handle-prefix events, accessibility (tabindex, aria-label), no semicolons, conventional commits (feat, fix, scope). Use when editing frontend or UI code.
+globs: **/*.ts, **/*.tsx
 alwaysApply: false
 ---
 

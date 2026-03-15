@@ -1,6 +1,6 @@
 ---
-description: Next.js App Router, React, TypeScript, Tailwind — frontend architecture, folder structure, features, colocation. Use when editing apps/web or any React/Next.js files.
-globs: apps/web/**/*.{ts,tsx}
+description: Next.js App Router, React, TypeScript, Tailwind — frontend architecture, folder structure, features, colocation. Use when editing any React/Next.js files.
+globs: **/*.tsx
 alwaysApply: false
 ---
 

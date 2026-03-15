@@ -1,6 +1,6 @@
 ---
 description: NestJS backend API — TypeScript conventions, modules, controllers, services, DTOs, class-validator, exception filters, guards, interceptors, Jest tests, SOLID, naming (PascalCase, camelCase, kebab-case). Use when editing backend, API, or NestJS code.
-globs: apps/api/**/*.ts
+globs: **/*.module.ts, **/*.controller.ts, **/*.service.ts, **/*.validation.ts, **/*.repository.ts, **/*.entity.ts, **/*.dto.ts, **/*.filter.ts, **/*.interceptor.ts, **/*.guard.ts, **/*.port.ts, **/*.provider.ts, **/*.schema.ts, **/*.prompt.ts, **/*.constants.ts, **/*.error.ts, **/*.spec.ts, **/main.ts, **/lambda.ts
 alwaysApply: false
 ---
 

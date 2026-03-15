@@ -1,6 +1,6 @@
 ---
 description: Testing — stubs vs mocks, placement of test doubles, shared vs local. Use when writing or refactoring tests, mocks, or stubs.
-globs: "**/*.spec.{ts,tsx},**/*.test.{ts,tsx},**/mocks.{ts,tsx},**/stubs.ts"
+globs: **/*.spec.ts, **/*.spec.tsx, **/*.test.ts, **/*.test.tsx, **/mocks.ts, **/mocks.tsx, **/stubs.ts
 alwaysApply: false
 ---
 

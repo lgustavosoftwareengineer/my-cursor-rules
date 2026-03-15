@@ -1,6 +1,6 @@
 ---
 description: React, TypeScript, Tailwind — frontend architecture, folder structure, features, colocation. Use when editing React + Tailwind apps (Vite, CRA, etc.).
-globs: src/**/*.{ts,tsx}
+globs: **/*.ts, **/*.tsx
 alwaysApply: false
 ---
 
